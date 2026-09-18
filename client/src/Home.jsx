@@ -3,13 +3,41 @@ import "./App.css";
 import AvatarRenderer from "./components/AvatarRenderer.jsx";
 import { COUNT_ANIMATION, NAMASTE_ANIMATION, WAVE_ANIMATION } from "./lib/animationData.js";
 
+function Avatar({ isActive }) {
+  const avatarRef = useRef(null);
+
+  useEffect(() => {
+    if (avatarRef.current) {
+      if (isActive) {
+        avatarRef.current.play();
+      } else {
+        avatarRef.current.pause();
+        avatarRef.current.currentTime = 0;
+      }
+    }
+  }, [isActive]);
+
+  return (
+    <div className="avatar-container">
+      <video 
+        ref={avatarRef}
+        className="avatar-video"
+        src="/avatar.mp4"
+        loop
+        muted
+        playsInline
+      />
+      {!isActive && <div className="avatar-placeholder">Avatar</div>}
+    </div>
+  );
+}
+
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendStatus, setSendStatus] = useState("");
-  const [sequence, setSequence] = useState(null);
-  const [triggerSend, setTriggerSend] = useState(false);
+  const [avatarActive, setAvatarActive] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -63,7 +91,7 @@ export default function Home() {
       
       mediaRecorder.start(100);
       setIsRecording(true);
-      console.log('🎙️ Speech Event: Started recording audio...');
+      setAvatarActive(true);
       
     } catch (err) {
       console.error("Error accessing microphone:", err);
@@ -75,6 +103,7 @@ export default function Home() {
       console.log('🛑 Speech Event: Recording stopped, processing audio transcript...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setAvatarActive(false);
     }
   };
 
@@ -188,7 +217,9 @@ export default function Home() {
 
       <div className="container">
         <div className="left-panel">
-          <AvatarRenderer dynamicAnimData={sequence} onSequenceEnd={() => setSequence(null)} />
+          <div className="left-box">
+            <Avatar isActive={avatarActive} />
+          </div>
         </div>
 
         <div className="right-panel">
